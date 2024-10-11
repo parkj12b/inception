@@ -1,22 +1,31 @@
-version: '3.8'
-
 services:
   nginx:
     build: requirements/nginx
     container_name: nginx
+    env_file:
+      - .env
     ports:
       - "443:443"
     restart: always
     depends_on:
-      - php
+      - wordpress-php
     networks:
-      - app-networks
+      - app-network
+    volumes:
+      - wp_data:/var/www/html
   
   wordpress-php:
     build: requirements/wordpress
     container_name: wordpress-php
     ports:
       - "9000:9000"
+    env_file:
+      - .env
+    environment:
+      WORDPRESS_DB_HOST: ${DB_HOST}
+      WORDPRESS_DB_USER: ${DB_USERNAME}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${DB_DATABASE}
     volumes:
       - wp_data:/var/www/html
     depends_on:
@@ -26,12 +35,19 @@ services:
     restart: always
 
   mariadb:
-    buiild: requirements/mariadb
+    build: 
+      context:
+        requirements/mariadb
     container_name: mariadb
     ports:
       - "3306:3306"
     env_file:
       - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -40,7 +56,20 @@ services:
 
 volumes:
   wp_data:
+    driver: local
+    name: wp_data
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/minsepar/data/wp_data
   db_data:
+    driver: local
+    name: db_data
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/minsepar/data/db_data
 
 networks:
   app-network:
+    driver: bridge

@@ -1,16 +1,21 @@
 FROM debian:bullseye
 
-ENV MYSQL_ROOT_PASSWORD=
-
 RUN apt-get update && \
-    apt-get install -y mariadb-server init && \
+    apt-get install -y mariadb-server tini && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY my.cnf /etc/mysql/my.cnf
+COPY 50-server.cnf /etc/mysql/mariadb.conf.d/.
+COPY init.sql /etc/mysql/init.sql
+COPY sql.sh /etc/mysql/sql.sh
+
+RUN chown -R mysql:mysql /var/lib/mysql && chmod -R 755 /var/lib/mysql
+RUN chmod +x /etc/mysql/sql.sh
 
 EXPOSE 3306
 
-ENTRYPOINT [ "/usr/bin/init", "--" ]
+RUN mkdir -p /run/mysqld
 
-CMD [ "mysqld" ]
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
+
+CMD ./etc/mysql/sql.sh; mysql_install_db; mysqld

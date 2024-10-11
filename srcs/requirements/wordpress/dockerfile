@@ -1,20 +1,22 @@
 FROM debian:bullseye
 
 RUN apt-get update -y && \
-    apt-get -y install tini maria-dbclient wget curl tar php7.4-fpm php-mysql \
+    apt-get -y install tini mariadb-client wget curl tar php7.4-fpm php-mysql \
+    less && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists*
 
-RUN wget https://wordpress.org/latest.tar.gz && \
-    tar -xzf latest.tar.gz && \
-    rm latest.tar.gz && \
-    mv wordpress /var/www/html/ && \
-    chown -R www-data:www-data /var/www/html/wordpress
-
 RUN sed -i "s/listen = .*/listen = 9000/" /etc/php/7.4/fpm/pool.d/www.conf
+
+COPY init-wordpress.sh /usr/local/bin/
+COPY www.conf /etc/php/7.4/fpm/pool.d/
+
+RUN chmod +x /usr/local/bin/init-wordpress.sh
+RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
 
 EXPOSE 9000
 
+
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
-CMD [ "php-fpm7.4" ]
+CMD [ "init-wordpress.sh" ]
