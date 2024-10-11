@@ -6,7 +6,7 @@
 #    By: minsepar <minsepar@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/10/10 17:22:41 by minsepar          #+#    #+#              #
-#    Updated: 2024/10/11 15:42:00 by minsepar         ###   ########.fr        #
+#    Updated: 2024/10/11 17:22:12 by minsepar         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,9 @@ ps: ## List containers
 
 clean:
 	@$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down --rmi all -v --remove-orphans
+
+re: clean
+	make up
 
 fclean: clean
 	docker system prune -a --volumes
